@@ -9,6 +9,7 @@ typedef void (*uint8_callback_t)(uint8_t);
 typedef void (*float_callback_t)(float);
 typedef void (*str_callback_t)(String);
 
+// #define DEBUG
 #ifdef DEBUG
 #define DEBUG(str) Serial.print(F("debug: \""));Serial.println(str+'\"')
 #else
@@ -36,6 +37,9 @@ private:
     void read();
 
     void keywordDetector();
+
+    void removeKeyword();
+    bool isKeyword(const char* keyword);
 
     void printOption(const char* keyword, const char* type);
 

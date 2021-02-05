@@ -42,8 +42,15 @@ void SerialSetup::read()
                     Serial.println('>'+buffer);
                     flush();
                     return;
-                }                
-                buffer += c;
+                } 
+                if (c == '\b')
+                {
+                    buffer.remove(buffer.length()-1);
+                }
+                else
+                {
+                    buffer += c;
+                } 
             }
             delay(0);
         }
@@ -86,7 +93,7 @@ void SerialSetup::keywordDetector()
 {
     if (buffer.length() > 1)
     {
-        if (buffer.indexOf(_keyword) >= 0)
+        if (isKeyword(_keyword.c_str()))
         {
             if (!active)
             {
@@ -104,19 +111,11 @@ void SerialSetup::keywordDetector()
             switchMode();
             flush();
         }
-        if (buffer.indexOf(F("exit")) >= 0)
+        if (isKeyword("exit"))
         {
             if (active)
             {
-                if(pass.length() > 0)
-                {
-                    if (buffer.indexOf(pass) == -1)
-                    {
-                        Serial.println(F("Password incorrecta"));
-                        flush();
-                        return;
-                    }
-                }
+                buffer = "";
                 switchMode();
                 flush();
             }
@@ -124,14 +123,24 @@ void SerialSetup::keywordDetector()
     }
 }
 
+bool SerialSetup::isKeyword(const char* keyword)
+{
+    return (buffer.substring(0, buffer.indexOf(" ")) == String(keyword));
+}
+
+void SerialSetup::removeKeyword()
+{
+    buffer.remove(0, buffer.indexOf(" ")+1);
+}
+
 void SerialSetup::on(const char* keyword, int_callback_t c)
 {
     printOption(keyword, "int");
     if (buffer.length() > 1)
     {
-        if (buffer.indexOf(keyword) >= 0)
+        if (isKeyword(keyword))
         {
-            buffer.remove(0, sizeof(keyword)+1);
+            removeKeyword();
             DEBUG(buffer);
 
             int output=0;
@@ -148,9 +157,9 @@ void SerialSetup::on(const char* keyword, str_callback_t c)
 
     if (buffer.length() > 1)
     {
-        if (buffer.indexOf(keyword) >= 0)
+        if (isKeyword(keyword))
         {
-            buffer.remove(0, sizeof(keyword)+1);
+            removeKeyword();
             DEBUG(buffer);
 
             (*c)(buffer);
@@ -166,7 +175,7 @@ void SerialSetup::on(const char* keyword, void_callback_t c)
 
     if (buffer.length() > 1)
     {
-        if (buffer.indexOf(keyword) >= 0)
+        if (isKeyword(keyword))
         {
             if(c != NULL)
                 (*c)();
